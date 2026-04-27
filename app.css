@@ -1,0 +1,347 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+  padding: 40px 60px;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 主容器布局 */
+.container {
+  display: flex;
+  gap: 40px;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+}
+
+/* 左侧面板 */
+.left-panel {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  justify-content: center;
+  padding-right: 40px;
+}
+
+/* h1 标题 */
+h1 {
+  font-size: 24px;
+  font-weight: 400;
+  color: #000000;
+  letter-spacing: -0.5px;
+}
+
+/* 密码输入框容器 */
+.password-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.password-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#password {
+  width: 100%;
+  max-width: 100%;
+  font-size: 24px;
+  font-weight: 400;
+  padding: 12px 48px 12px 0;
+  /* padding-right: 48px; */
+  border: none;
+  border-bottom: 2px solid #d0d0d0;
+  background-color: #ffffff;
+  color: #000000;
+  transition: border-color 0.3s ease;
+  letter-spacing: 3px;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+
+#password::placeholder {
+  color: #a0a0a0;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  transition: opacity 0.3s ease;
+}
+
+#password:focus {
+  outline: none;
+  border-bottom-color: #000000;
+}
+
+#password:focus::placeholder {
+  opacity: 0;
+}
+
+/* 隐藏Edge浏览器原生密码可见性按钮 */
+#password::-ms-reveal {
+  display: none;
+}
+
+/* 隐藏Chrome/Edge的密码可见性图标 */
+#password::-webkit-reveal {
+  display: none;
+}
+
+/* 自定义光标闪烁 */
+#password {
+  caret-color: transparent;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* 眼睛按钮 */
+.eye-button {
+  position: absolute;
+  right: 12px;
+  background: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  cursor: pointer;
+  color: #a0a0a0;
+  transition: color 0.3s ease;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eye-icon {
+  width: 22px;
+  height: 22px;
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.eye-open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.eye-button.is-visible .eye-open {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.eye-button.is-visible .eye-closed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.eye-button:hover {
+  color: #000000;
+}
+
+.custom-caret {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  opacity: 0;
+  color: #000000;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  pointer-events: none;
+  animation: cursor-blink 1s infinite;
+}
+
+.password-wrapper.caret-visible .custom-caret {
+  opacity: 1;
+}
+
+/* 密码建议 */
+.suggestion {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+  min-height: 20px;
+  margin-top: 4px;
+}
+
+/* 右侧面板 */
+.right-panel {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  justify-content: center;
+  align-items: center;
+  padding-left: 40px;
+}
+
+/* 切换按钮组 */
+.mode-toggle {
+  display: flex;
+  gap: 12px;
+  background-color: #f5f5f5;
+  padding: 4px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.mode-button {
+  flex: 1;
+  padding: 10px 16px;
+  height: 40px;
+  border: none;
+  background-color: transparent;
+  color: #666666;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+
+.mode-button.active {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button:hover:not(.active) {
+  color: #000000;
+}
+
+/* 进度环容器 */
+.entropy-ring-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-height: 45%;
+}
+
+.entropy-ring {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+
+.entropy-ring svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+}
+
+.entropy-ring-background {
+  fill: none;
+  stroke: #e8e8e8;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transform: rotate(126deg);
+  transform-origin: 130px 130px;
+}
+
+.entropy-ring-progress {
+  fill: none;
+  stroke: #ff3b30;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transform: rotate(126deg);
+  transform-origin: 130px 130px;
+  transition: stroke 0.3s ease, stroke-dashoffset 0.3s ease;
+}
+
+.entropy-ring-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.entropy-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.entropy-unit {
+  font-size: 12px;
+  color: #a0a0a0;
+  margin-top: 4px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  body {
+    padding: 24px 20px;
+    height: auto;
+  }
+
+  .container {
+    flex-direction: column;
+    gap: 40px;
+    height: auto;
+  }
+
+  .left-panel {
+    flex: 1;
+    padding-right: 0;
+  }
+
+  .right-panel {
+    flex: 1;
+    padding-left: 0;
+    gap: 24px;
+  }
+
+  .entropy-ring {
+    width: 200px;
+    height: 200px;
+  }
+
+  .entropy-value {
+    font-size: 28px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  #password {
+    font-size: 20px;
+  }
+
+  .custom-caret {
+    font-size: 20px;
+  }
+
+  .mode-toggle {
+    max-width: 200px;
+  }
+}

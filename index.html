@@ -4,27 +4,61 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>密码强度评估</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei", sans-serif; margin: 24px; }
-      .row { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
-      label { font-weight: 600; }
-      input { font-size: 16px; padding: 10px 12px; }
-      .meta { color: #555; font-size: 14px; }
-      .out { margin-top: 12px; padding: 12px; border: 1px solid #ddd; }
-      .out strong { font-size: 18px; }
-    </style>
+    <link rel="stylesheet" href="./app.css" />
   </head>
   <body>
-    <h1>密码强度评估</h1>
+    <div class="container">
+      <!-- 左侧面板 -->
+      <div class="left-panel">
+        <h1>密码强度评估</h1>
 
-    <div class="row">
-      <label for="password">密码</label>
-      <input id="password" type="password" autocomplete="new-password" placeholder="请输入密码" />
-      <div class="meta" id="dictStatus">常见密码词典：加载中…</div>
+        <div class="password-container">
+          <div class="password-wrapper">
+            <input
+              id="password"
+              type="password"
+              autocomplete="new-password"
+              placeholder="放心，所有计算均处于本地"
+            />
+            <span id="customCaret" class="custom-caret" aria-hidden="true">_</span>
+            <button class="eye-button" id="eyeButton" aria-label="显示密码">
+              <img src="./svg/visible.svg" alt="" class="eye-icon eye-open" />
+              <img src="./svg/invisible.svg" alt="" class="eye-icon eye-closed" />
+            </button>
+          </div>
+        </div>
 
-      <div class="out">
-        <div>强度（熵，bits）：<strong id="entropyBits">0</strong></div>
-        <div class="meta">说明：数值越大，通常意味着越难被猜测/穷举。</div>
+        <p class="suggestion" id="suggestion"></p>
+      </div>
+
+      <!-- 右侧面板 -->
+      <div class="right-panel">
+        <!-- 切换按钮 -->
+        <div class="mode-toggle">
+          <button class="mode-button active" data-mode="default">默认</button>
+          <button class="mode-button" data-mode="advanced">高级</button>
+        </div>
+
+        <!-- 进度环 -->
+        <div class="entropy-ring-container">
+          <div class="entropy-ring">
+            <svg viewBox="0 0 260 260">
+              <circle class="entropy-ring-background" cx="130" cy="130" r="92" />
+              <circle
+                class="entropy-ring-progress"
+                id="entropyProgress"
+                cx="130"
+                cy="130"
+                r="92"
+                stroke="#ff3b30"
+              />
+            </svg>
+            <div class="entropy-ring-label">
+              <div class="entropy-value" id="entropyValue">0</div>
+              <div class="entropy-unit">bits</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
