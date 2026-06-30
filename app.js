@@ -2,8 +2,6 @@ import PasswordQualityCalculator from './Lib/PasswordQualityCalculator.js';
 
 const passwordInput = document.getElementById('password');
 const eyeButton = document.getElementById('eyeButton');
-const customCaret = document.getElementById('customCaret');
-const passwordWrapper = document.querySelector('.password-wrapper');
 const entropyValue = document.getElementById('entropyValue');
 const entropyUnit = document.getElementById('entropyUnit');
 const entropyRingLabel = document.getElementById('entropyRingLabel');
@@ -18,11 +16,12 @@ const checkDigit = document.getElementById('checkDigit');
 const checkSpecial = document.getElementById('checkSpecial');
 const checkNoKeyword = document.getElementById('checkNoKeyword');
 const checkNotWeak = document.getElementById('checkNotWeak');
-const textMeasureCanvas = document.createElement('canvas');
-const textMeasureContext = textMeasureCanvas.getContext('2d');
 
 // 当前模式：'normal' 或 'advanced'
 let currentMode = 'normal';
+
+// 常见弱密码集合（符合复杂度要求但被广泛使用的密码）
+let commonWeakPasswords = new Set();
 
 // 正则表达式用于检测密码组成
 const regexUpper = /[A-Z]/;
@@ -43,7 +42,6 @@ const suggestions = [
   '长度至少12个字符会大幅提升安全性',
   '定期更换密码可以提高账户安全',
   '避免在多个网站使用相同的密码',
-  '密码中的每个额外字符都会指数级增加安全性',
   '使用密码管理器可以安全地保存复杂密码',
   '避免使用键盘上相邻的字符（如qwerty）',
 ];
@@ -89,7 +87,7 @@ function startSuggestionRotation() {
   suggestionTimer = setInterval(() => {
     suggestionIndex = (suggestionIndex + 1) % suggestions.length;
     setSuggestionWithFade(suggestions[suggestionIndex]);
-  }, 3000);
+  }, 5000);
 }
 
 function stopSuggestionRotation() {
@@ -101,8 +99,8 @@ function stopSuggestionRotation() {
 
 // 获取密码评级（普通模式）
 function getRating(bits) {
-  if (bits < 50) return { text: '差', color: '#ff3b30' };
-  if (bits < 100) return { text: '中等', color: '#ffcc00' };
+  if (bits < 50) return { text: '差劲', color: '#ff3b30' };
+  if (bits < 100) return { text: '一般', color: '#ffcc00' };
   return { text: '好', color: '#34c759' };
 }
 
@@ -130,23 +128,30 @@ function containsDictionaryKeyword(pwd) {
   return false;
 }
 
-// 检查整个密码是否是常见弱密码
-function isPopularPassword(pwd) {
+// 检查整个密码是否是常见弱密码（包含PopularPasswords词典和自定义常见弱密码词典）
+function isWeakPassword(pwd) {
   if (!pwd || pwd.length === 0) return false;
+
+  // 检查自定义常见弱密码词典
+  if (commonWeakPasswords.has(pwd)) return true;
+
+  // 检查PopularPasswords词典
   const PopularPasswords = PasswordQualityCalculator?.PopularPasswords;
   if (!PopularPasswords) return false;
   return PopularPasswords.IsPopularPassword(pwd.toLowerCase());
 }
 
 // 生成针对性的密码加固建议
-function getTargetedSuggestion(hasUpper, hasLower, hasDigit, hasSpecial, hasKeyword, isWeak) {
+function getTargetedSuggestion(hasUpper, hasLower, hasDigit, hasSpecial, hasKeyword, isWeak, pwdLen) {
   const issues = [];
+  if (isWeak) return '此密码属于常见弱密码，强烈建议更换';
+  if (pwdLen > 0 && pwdLen < 8) return '密码过短，建议至少 8 个字符';
+  if (pwdLen >= 8 && pwdLen < 12) issues.push('增加到 12 个字符以上');
   if (!hasUpper) issues.push('添加大写字母');
   if (!hasLower) issues.push('添加小写字母');
   if (!hasDigit) issues.push('添加数字');
   if (!hasSpecial) issues.push('添加特殊字符');
   if (hasKeyword) issues.push('避免使用词典中的常见单词');
-  if (isWeak) return '此密码属于常见弱密码，强烈建议更换';
 
   if (issues.length === 0) return '密码组成良好，继续保持';
   return '建议：' + issues.join('、');
@@ -163,51 +168,6 @@ function updateModeUI() {
   } else {
     checkList.classList.add('visible');
   }
-}
-
-function getRenderedTextUntilCaret(inputEl, caretPos) {
-  const rawText = (inputEl.value ?? '').slice(0, caretPos);
-  if (inputEl.type === 'password') {
-    return '•'.repeat(rawText.length);
-  }
-  return rawText;
-}
-
-function measureInputTextWidth(inputEl, text) {
-  if (!textMeasureContext) return 0;
-  const styles = window.getComputedStyle(inputEl);
-  textMeasureContext.font = `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-  const textWidth = textMeasureContext.measureText(text).width;
-  const letterSpacing = Number.parseFloat(styles.letterSpacing) || 0;
-  const spacingWidth = text.length > 1 ? letterSpacing * (text.length - 1) : 0;
-  return textWidth + spacingWidth;
-}
-
-function updateCustomCaretPosition() {
-  if (!customCaret || !passwordWrapper) return;
-
-  const isFocused = document.activeElement === passwordInput;
-  const hasSelection = passwordInput.selectionStart !== passwordInput.selectionEnd;
-  const hasValue = (passwordInput.value ?? '').length > 0;
-  if (!isFocused || hasSelection || !hasValue) {
-    passwordWrapper.classList.remove('caret-visible');
-    return;
-  }
-
-  const caretPos = passwordInput.selectionStart ?? 0;
-  const renderedText = getRenderedTextUntilCaret(passwordInput, caretPos);
-  const textWidth = measureInputTextWidth(passwordInput, renderedText);
-  const styles = window.getComputedStyle(passwordInput);
-  const paddingLeft = Number.parseFloat(styles.paddingLeft) || 0;
-  const paddingRight = Number.parseFloat(styles.paddingRight) || 0;
-  const maxLeft = passwordInput.clientWidth - paddingRight - 8;
-  const left = Math.max(
-    paddingLeft,
-    Math.min(paddingLeft + textWidth - passwordInput.scrollLeft, maxLeft),
-  );
-
-  customCaret.style.left = `${left}px`;
-  passwordWrapper.classList.add('caret-visible');
 }
 
 // 更新进度环
@@ -243,22 +203,20 @@ function evaluate() {
   const bits = PasswordQualityCalculator(pwd);
   const roundedBits = Math.round(bits);
 
-  // 更新环内文字（按模式显示不同内容）
-  const rating = getRating(roundedBits);
-  if (currentMode === 'normal') {
-    entropyValue.textContent = rating.text;
-    entropyUnit.textContent = '';
-    entropyValue.style.color = rating.color;
-  } else {
-    entropyValue.textContent = String(roundedBits);
-    entropyUnit.textContent = 'bits';
-    entropyValue.style.color = getColorByEntropy(roundedBits);
-  }
-
   // 更新进度环
   updateEntropyRing(roundedBits);
 
   if (pwd.length === 0) {
+    // 密码为空：进度环颜色覆盖后重新设置灰色
+    if (currentMode === 'normal') {
+      entropyValue.textContent = '空口令';
+      entropyUnit.textContent = '';
+    } else {
+      entropyValue.textContent = '0';
+      entropyUnit.textContent = 'bits';
+    }
+    entropyValue.style.color = '#a0a0a0';
+
     // 密码为空：轮换通用建议
     stopSuggestionRotation();
     startSuggestionRotation();
@@ -273,6 +231,18 @@ function evaluate() {
     return;
   }
 
+  // 有密码：设置环内文字
+  const rating = getRating(roundedBits);
+  if (currentMode === 'normal') {
+    entropyValue.textContent = rating.text;
+    entropyUnit.textContent = '';
+    entropyValue.style.color = rating.color;
+  } else {
+    entropyValue.textContent = String(roundedBits);
+    entropyUnit.textContent = 'bits';
+    entropyValue.style.color = getColorByEntropy(roundedBits);
+  }
+
   // 有密码输入时停止轮换
   stopSuggestionRotation();
 
@@ -282,10 +252,10 @@ function evaluate() {
   const hasDigit = regexDigit.test(pwd);
   const hasSpecial = regexSpecial.test(pwd);
   const hasKeyword = containsDictionaryKeyword(pwd);
-  const isWeak = isPopularPassword(pwd);
+  const isWeak = isWeakPassword(pwd);
 
   // 更新建议
-  const suggestion = getTargetedSuggestion(hasUpper, hasLower, hasDigit, hasSpecial, hasKeyword, isWeak);
+  const suggestion = getTargetedSuggestion(hasUpper, hasLower, hasDigit, hasSpecial, hasKeyword, isWeak, pwd.length);
   setSuggestionWithFade(suggestion);
 
   // 更新检测列表
@@ -306,7 +276,6 @@ eyeButton.addEventListener('click', () => {
   passwordInput.type = isPassword ? 'text' : 'password';
   eyeButton.classList.toggle('is-visible', isPassword);
   eyeButton.setAttribute('aria-label', isPassword ? '隐藏密码' : '显示密码');
-  updateCustomCaretPosition();
 });
 
 // 切换按钮处理
@@ -322,23 +291,16 @@ modeButtons.forEach((button) => {
 
 // 密码输入事件
 passwordInput.addEventListener('input', evaluate);
-['focus', 'click', 'keyup', 'input', 'select', 'scroll'].forEach((eventName) => {
-  passwordInput.addEventListener(eventName, updateCustomCaretPosition);
-});
-passwordInput.addEventListener('blur', () => {
-  passwordWrapper?.classList.remove('caret-visible');
-});
 
 // 页面加载完成时的初始化
 initializeRandomPlaceholder();
 setRandomSuggestion();
 evaluate();
-updateCustomCaretPosition();
 
 // 异步加载常见密码词典（非必需，不影响基础功能）
 async function tryLoadPopularPasswordDictionary() {
   try {
-    const res = await fetch('./Lib/MostPopularPasswords.txt', { cache: 'no-store' });
+    const res = await fetch('./Dict/CommonElements.txt', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const text = await res.text();
@@ -358,4 +320,30 @@ async function tryLoadPopularPasswordDictionary() {
   }
 }
 
+// 异步加载常见弱密码词典（符合复杂度但被广泛使用的密码）
+async function tryLoadCommonWeakPasswords() {
+  try {
+    const res = await fetch('./Dict/CommonWeakPasswords.txt', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const text = await res.text();
+    const list = text
+      .split(/\r?\n/g)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    commonWeakPasswords = new Set(list);
+  } catch {
+    // 忽略错误，不影响基础功能
+  }
+}
+
 tryLoadPopularPasswordDictionary();
+tryLoadCommonWeakPasswords();
+
+// 一切就绪后渐显面板，消除加载闪烁
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.querySelector('.container')?.classList.add('ready');
+  });
+});

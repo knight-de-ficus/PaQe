@@ -1,44 +1,77 @@
-# 密码强度评估 (PaQe)
+<h1 align="center">PaQe — Password Quality Evaluator</h1>
 
-一个基于熵值计算的密码强度评估工具，所有计算均在本地浏览器完成，密码不会发送到任何服务器。
+<p align="center">
+  <strong>密码强度评估</strong>
+</p>
 
-## 功能
+<p align="center">
+  <a href="https://knight-de-ficus.github.io/PaQe/" target="_blank" rel="noopener">
+    <strong>📊 在线演示</strong>
+  </a>
+</p>
 
-- **密码熵值计算**：基于字符类型、模式识别（重复、数字序列、差值序列）和常见密码词典，精确估算密码的比特熵值。
-- **双模式切换**：
-  - **普通模式**：环中显示"好 / 中等 / 差"评级，简洁直观。
-  - **高级模式**：显示精确熵值（bits），并提供六项安全指标检测（大小写、数字、特殊字符、词典关键字、常见弱密码）。
-- **针对性加固建议**：根据密码缺失的要素给出具体改进建议；密码为空时自动轮换通用安全提示。
-- **常见弱密码检测**：内置 10 万+ 常见密码词典，识别弱密码及子串匹配。
-- **隐私保护**：所有计算在浏览器本地执行，绝不传输密码。
+---
 
-## 用法
+**PaQe**（Password Quality Evaluator）通过多项指标对密码进行客观、量化的安全性评价，帮助用户理解什么样的密码才是真正安全的——以及为什么。
 
-1. 在浏览器中打开 `index.html`（可通过 `npx live-server` 启动本地服务器）。
-2. 在输入框中输入密码，右侧进度环实时显示强度。
-3. 点击眼睛按钮可切换密码明文/密文显示。
-4. 右上角按钮切换「普通」/「高级」模式：
-   - **普通**：环中显示评级（好/中等/差），下方给出加固建议。
-   - **高级**：环中显示熵值（bits），下方以 ✓/✗ 列出各项安全指标。
+所有计算均在浏览器本地完成，**不会将任何密码数据发送至网络**。
+
+## 评估算法
+
+PaQe 的熵值计算引擎基于 **KeePass 2.23+** 使用的密码质量估计算法。算法通过模式识别寻找最佳编码成本：
+
+1. 将密码拆解为若干**模式片段**——每个字符默认归入所属的字符空间（大小写字母、数字、特殊字符、高位 ANSI 字符等）。
+2. 同时扫描**重复序列**、**连续多位数**、**等差/等比递增递减序列**。
+3. 识别密码中是否包含**常见弱密码**（内建约 10,000 条高频密码列表），并支持大小写变体和 **L33t 替换**检测。
+4. 枚举所有可能的模式组合路径，使用静态熵编码器计算每种组合的编码成本（bit），取**最低成本**作为最终熵值评估。
+
+> 参考：[KeePass Password Quality Estimation](https://keepass.info/help/kb/pw_quality_est.html)
+
+## 功能特性
+
+- **KeePass 同源算法** — 移植 KeePass 2.23+ 的密码质量评估引擎，以 bits 量化密码强度
+- **环形进度可视化** — 红黄绿三色进度环直观展示密码强度等级
+- **普通 / 高级双模式** — 普通模式显示强度评级，高级模式展示精确熵值与六项密码指标
+- **密码指标检查** — 检测大小写、数字、特殊字符，并通过近 8 万条词典匹配常见关键词与弱密码
+- **动态加固建议** — 根据密码短板生成针对性的改进提示
+- **纯本地计算** — 所有运算在浏览器端完成，密码不离开用户设备
 
 ## 项目结构
 
 ```
 PaQe/
-├── index.html                     # 主页面
-├── app.js                         # 前端交互逻辑
-├── app.css                        # 样式表
+├── index.html                         # 入口页面
+├── app.css                            # 页面样式
+├── app.js                             # 应用逻辑（UI交互、密码检测、模式切换）
+│
 ├── Lib/
-│   ├── PasswordQualityCalculator.js  # 密码熵值计算核心
-│   ├── PopularPasswords.js           # 常见密码词典匹配
-│   ├── MostPopularPasswords.js       # 词典加载入口
-│   └── MostPopularPasswords.txt      # 10万+常见密码
-└── svg/                              # 图标资源
-    ├── visible.svg
-    └── invisible.svg
+│   ├── PasswordQualityCalculator.js   # 熵值计算算法
+│   ├── PopularPasswords.js            # 密码词典管理
+│   └── MostPopularPasswords.js        # 词典加载入口
+│
+├── Dict/
+│   ├── CommonElements.txt             # 关键词词典
+│   └── CommonWeakPasswords.txt        # 常见弱密码库
+│
+└── svg/                               # 图标   
 ```
 
-## 技术细节
+## 使用方式
 
-- 纯前端实现，无后端依赖。
-- 使用信息论熵值估算模型，综合考虑字符类型、重复模式、数字序列和字典匹配。
+### 本地运行
+
+浏览器打开 `index.html` ，或通过任意 HTTP 服务器提供服务：
+
+```bash
+# Python
+python -m http.server -d . 8080
+
+# Node.js (npx)
+npx serve .
+
+# 浏览器打开 http://localhost:8080
+```
+
+### 在线演示
+
+[PaQe Demo](https://knight-de-ficus.github.io/PaQe/)

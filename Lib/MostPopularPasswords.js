@@ -1,4 +1,4 @@
-import MostPopularPasswords from 'raw-loader!./MostPopularPasswords.txt'
+import MostPopularPasswords from 'raw-loader!../Dict/CommonElements.txt'
 
 const root = typeof self !== 'undefined' ? self : this;
 
